@@ -1,1 +1,0 @@
-export { Home as MainLayout } from '../../pages/Home';

@@ -1,4 +1,4 @@
-export type Exercise = {
+export interface Exercise {
     exercise: string
     set: Set[],
     setPlaceHolder: Set[]
@@ -6,12 +6,12 @@ export type Exercise = {
     multiset?: string
 };
 
-export type Set = {
+export interface Set {
     count?: number,
     weight?: number
 };
 
-export type Inputs = {
+export interface Inputs {
     exercises: Exercise[]
 }
 

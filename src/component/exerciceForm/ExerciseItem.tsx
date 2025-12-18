@@ -62,7 +62,7 @@ export const ExerciseItem = ({ exerciseIndex, register, control, remove }: any) 
                         />
                     </div>
                     <div className="">
-                        <div className="d-flex gap-2 mb-2 align-items-center fw-bold text-muted">
+                        <div className="d-flex gap-2 mb-2 align-items-center text-muted">
                             <span style={{ minWidth: '50px' }}></span>
                             <span className="form-control border-0 bg-transparent">Répétitions</span>
                             <span className="form-control border-0 bg-transparent">Poids (kg)</span>
@@ -72,14 +72,14 @@ export const ExerciseItem = ({ exerciseIndex, register, control, remove }: any) 
                             <div key={setField.id} className="d-flex gap-2 mb-2 align-items-center">
                                 <span>{setIndex + 1}</span>
                                 <input
-                                    className="form-control"
+                                    className="form-control placeholder-opacity-25 fw-semibold"
                                     type="number"
                                     placeholder={setPlaceHolder[setIndex]?.count?.toString() || ''}
                                     {...register(`exercises.${exerciseIndex}.set.${setIndex}.count`, {
                                         setValueAs: (v: string) => v === '' ? 0 : Number(v)
                                     })} />
                                 <input
-                                    className="form-control"
+                                    className="form-control placeholder-opacity-25 fw-semibold"
                                     type="number"
                                     placeholder={setPlaceHolder[setIndex]?.weight?.toString() || ''}
                                     {...register(`exercises.${exerciseIndex}.set.${setIndex}.weight`, {

@@ -1,11 +1,13 @@
 
 import { useNavigate } from "react-router-dom";
-import { ExerciseForm } from "../component/mainPage/ExerciseForm";
+import { SwitchTheme } from '../component/theme';
+import { ExerciseForm } from '../component/exerciceForm';
+import { useSpreadsheetId } from '../hooks/useSpreadsheetId';
 
 export const Home = () => {
     const navigate = useNavigate();
-    // const [sheetInfo, setSheetInfo] = useState<any>(null); 
-    
+    const spreadsheetId = useSpreadsheetId();
+
     const handleLogout = () => {
         localStorage.removeItem('google_access_token');
         navigate('/auth');
@@ -16,7 +18,7 @@ export const Home = () => {
     //     const info = await getSpreadsheetInfo('1HHKuHdkRi21bL2u_O1snVZiYnAzZKeFCXwZUkqeQ9DY');
     //     setSheetInfo(info);
     // }
-    
+
 
     // useEffect(() => {
     //     loadSheetInfo();
@@ -24,15 +26,18 @@ export const Home = () => {
 
     return (
         <div className="container">
-            <div className="text-center p-2">
-                <button className="btn btn-danger my-3 me-2" onClick={handleLogout}>
-                    Déconnexion 
+            <div className="d-flex align-items-center justify-content-center gap-3 py-3">
+                <button className="btn btn-danger" onClick={handleLogout}>
+                    Déconnexion
                 </button>
+                <button className="btn btn-secondary btn-sm" onClick={() => navigate('/configure')}>
+                    ⚙️
+                </button>
+                <SwitchTheme />
             </div>
 
             <h1 className="text-center mt-5">
-
-                <a href="https://docs.google.com/spreadsheets/d/1HHKuHdkRi21bL2u_O1snVZiYnAzZKeFCXwZUkqeQ9DY" target="_blank" rel="noopener noreferrer">
+                <a href={`https://docs.google.com/spreadsheets/d/${spreadsheetId}`} target="_blank" rel="noopener noreferrer">
                     Program
                 </a>
             </h1>

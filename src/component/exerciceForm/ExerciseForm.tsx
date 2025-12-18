@@ -1,9 +1,26 @@
-import { useForm, useFieldArray } from "react-hook-form"
+import { useForm, useFieldArray, useWatch } from "react-hook-form"
 import { ExerciseItem } from "./ExerciseItem";
-import { defaultExercise, type Inputs } from "./interface";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { getSpreadsheetData, writeSpreadsheetData } from "../../services/google/client"
 import { useParams } from "react-router-dom";
+import { defaultExercise, type Inputs } from "./interface";
+import { useSpreadsheetId } from "../../hooks/useSpreadsheetId";
+
+const parseSetValuesFromRow = (row: string[], startIndex: number = 4, endIndex: number = 7): Array<{ count: number, weight: number }> => {
+    const setValues = [];
+    for (let i = startIndex; i <= endIndex; i++) {
+        if (row[i]) {
+            const match = row[i].match(/(\d+)\/(\d+)kg/);
+            if (match) {
+                setValues.push({
+                    count: parseInt(match[1]),
+                    weight: parseInt(match[2])
+                });
+            }
+        }
+    }
+    return setValues;
+};
 
 export const ExerciseForm = () => {
     const {
@@ -18,60 +35,56 @@ export const ExerciseForm = () => {
     })
 
     const { semaine } = useParams()
+    const spreadsheetId = useSpreadsheetId()
+    const [isLoaded, setIsLoaded] = useState(false)
     const { fields, append, remove } = useFieldArray({
         control,
         name: "exercises"
     })
 
+    const watchedExercises = useWatch({ control, name: "exercises" })
+
     const loadFromSheets = async () => {
         try {
+            if (!spreadsheetId) return;
             const semaineAsInt = semaine && parseInt(semaine);
-            const data = await getSpreadsheetData('1HHKuHdkRi21bL2u_O1snVZiYnAzZKeFCXwZUkqeQ9DY', `semaine ${semaineAsInt}!A2:D10`);
+            const data = await getSpreadsheetData(spreadsheetId, `semaine ${semaineAsInt}!A2:H10`);
             console.log('Données du spreadsheet:', data);
 
             const precedentExercice: Record<string, any[]> = {};
             if (semaineAsInt && semaineAsInt > 1) {
-                const dataBefore = await getSpreadsheetData('1HHKuHdkRi21bL2u_O1snVZiYnAzZKeFCXwZUkqeQ9DY', `semaine ${semaineAsInt - 1}!A2:H10`);
+                const dataBefore = await getSpreadsheetData(spreadsheetId, `semaine ${semaineAsInt - 1}!A2:H10`);
                 console.log('Données du spreadsheet semaine précédente:', dataBefore);
                 if (dataBefore && Array.isArray(dataBefore) && dataBefore.length > 0) {
                     dataBefore.forEach((row: string[]) => {
                         const [name] = row;
-                        const setArray = [];
-
-                        for (let i = 4; i <= 7; i++) {
-                            if (row[i]) {
-                                const match = row[i].match(/(\d+)\/(\d+)kg/);
-                                if (match) {
-                                    setArray.push({
-                                        count: parseInt(match[1]),
-                                        weight: parseInt(match[2])
-                                    });
-                                }
-                            }
-                        }
-
-                        precedentExercice[name] = setArray;
+                        precedentExercice[name] = parseSetValuesFromRow(row);
                     });
                     console.log('Dictionnaire précédent:', precedentExercice)
                 }
             }
 
             if (data && Array.isArray(data) && data.length > 0) {
-                const exercises = data.map(([name, sets, repetitions, multiset]: [string, string, string, string]) => ({
-                    exercise: name,
-                    set: Array.from({ length: parseInt(sets) }, (_) => ({
-                        count: undefined,
-                        weight: undefined
-                    })),
-                    setPlaceHolder: Array.from({ length: parseInt(sets) }, (_, index) => ({
-                        count: precedentExercice[name]?.[index]?.count || undefined,
-                        weight: precedentExercice[name]?.[index]?.weight || undefined
-                    })),
-                    repetitions: repetitions,
-                    multiset: multiset
-                }));
+                const exercises = data.map((row: string[]) => {
+                    const [name, sets, repetitions, multiset] = row;
+                    const currentSetValues = parseSetValuesFromRow(row);
+                    return {
+                        exercise: name,
+                        set: Array.from({ length: parseInt(sets) }, (_, index) => ({
+                            count: currentSetValues[index]?.count || undefined,
+                            weight: currentSetValues[index]?.weight || undefined
+                        })),
+                        setPlaceHolder: Array.from({ length: parseInt(sets) }, (_, index) => ({
+                            count: precedentExercice[name]?.[index]?.count || undefined,
+                            weight: precedentExercice[name]?.[index]?.weight || undefined
+                        })),
+                        repetitions: repetitions,
+                        multiset: multiset
+                    };
+                });
 
                 reset({ exercises });
+                setIsLoaded(true);
             }
         } catch (error) {
             console.error('Erreur:', error);
@@ -80,6 +93,7 @@ export const ExerciseForm = () => {
 
     const saveToSheets = async (data: Inputs) => {
         try {
+            if (!spreadsheetId) return;
             const rows = data.exercises.map(ex => {
                 const row: any[] = [];
                 ex.set.forEach(s => {
@@ -94,18 +108,27 @@ export const ExerciseForm = () => {
 
             const values = [...rows];
             console.log(values);
-
-            await writeSpreadsheetData('1HHKuHdkRi21bL2u_O1snVZiYnAzZKeFCXwZUkqeQ9DY', 'exercice!D2', values);
-            alert('Données sauvegardées dans Google Sheets !');
+            const semaineAsInt = semaine && parseInt(semaine);
+            await writeSpreadsheetData(spreadsheetId, `semaine ${semaineAsInt}!E2`, values);
         } catch (error) {
             console.error('Erreur lors de la sauvegarde:', error);
-            alert('Erreur lors de la sauvegarde');
         }
     };
 
     useEffect(() => {
         loadFromSheets();
     }, [semaine]);
+
+    // Auto-save après 2 secondes d'inactivité
+    useEffect(() => {
+        if (!isLoaded || !watchedExercises) return;
+
+        const timer = setTimeout(() => {
+            saveToSheets({ exercises: watchedExercises });
+        }, 2000);
+
+        return () => clearTimeout(timer);
+    }, [watchedExercises, isLoaded]);
 
     const onSubmit = async (data: Inputs) => saveToSheets(data);
 
