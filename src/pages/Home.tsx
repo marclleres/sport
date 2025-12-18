@@ -36,11 +36,11 @@ export const Home = () => {
                 <SwitchTheme />
             </div>
 
-            <h1 className="text-center mt-5">
+            <h3 className="text-center">
                 <a href={`https://docs.google.com/spreadsheets/d/${spreadsheetId}`} target="_blank" rel="noopener noreferrer">
                     Program
                 </a>
-            </h1>
+            </h3>
             {/* {sheetInfo.map((sheet: any) => {
                 <p key={sheet.sheetId} className="text-center">Feuille: {sheet.title}</p>
                 <button className="text-center btn btn-primary me-2" onClick={() => navigate('/1')}>
