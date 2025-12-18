@@ -1,3 +1,11 @@
+const handleAuthError = (response: Response) => {
+    if (response.status === 401 || response.status === 403) {
+        localStorage.removeItem('google_access_token');
+        window.location.href = '/#/auth';
+        throw new Error('Session expirée, redirection vers la connexion...');
+    }
+};
+
 export async function getSpreadsheetData(spreadsheetId: string, range: string) {
     const accessToken = localStorage.getItem('google_access_token');
 
@@ -13,6 +21,8 @@ export async function getSpreadsheetData(spreadsheetId: string, range: string) {
             },
         }
     );
+
+    handleAuthError(response);
 
     const data = await response.json();
     return data.values;
@@ -43,6 +53,8 @@ export async function writeSpreadsheetData(
         }
     );
 
+    handleAuthError(response);
+
     const data = await response.json();
     return data;
 }
@@ -72,6 +84,8 @@ export async function appendSpreadsheetData(
         }
     );
 
+    handleAuthError(response);
+
     const data = await response.json();
     return data;
 }
@@ -96,6 +110,8 @@ export async function getSpreadsheetInfo(spreadsheetId: string): Promise<SheetIn
             },
         }
     );
+
+    handleAuthError(response);
 
     const data = await response.json();
     return {

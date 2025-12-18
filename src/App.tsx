@@ -1,5 +1,5 @@
 import './App.css'
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { GoogleAuthPage } from './pages/GoogleAuthPage';
 import { Home } from './pages/Home';
 import { ProtectedRoute } from './components/ProtectedRoute';
@@ -8,7 +8,7 @@ import { RequireSpreadsheet } from './components/RequireSpreadsheet';
 
 function App() {
   return (
-    <BrowserRouter basename="/sport">
+    <HashRouter>
       <Routes>
         <Route path="/auth" element={<GoogleAuthPage />} />
         <Route path="/configure" element={<ConfigurePage />} />
@@ -24,7 +24,7 @@ function App() {
         />
         <Route path="/" element={<Navigate to="/1" replace />} />
       </Routes>
-    </BrowserRouter>
+    </HashRouter>
   );
 }
 
