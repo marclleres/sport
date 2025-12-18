@@ -1,0 +1,107 @@
+export async function getSpreadsheetData(spreadsheetId: string, range: string) {
+    const accessToken = localStorage.getItem('google_access_token');
+
+    if (!accessToken) {
+        throw new Error('Non authentifié');
+    }
+
+    const response = await fetch(
+        `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${range}`,
+        {
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
+            },
+        }
+    );
+
+    const data = await response.json();
+    return data.values;
+}
+
+export async function writeSpreadsheetData(
+    spreadsheetId: string,
+    range: string,
+    values: any[][]
+) {
+    const accessToken = localStorage.getItem('google_access_token');
+
+    if (!accessToken) {
+        throw new Error('Non authentifié');
+    }
+
+    const response = await fetch(
+        `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${range}?valueInputOption=RAW`,
+        {
+            method: 'PUT',
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                values: values
+            })
+        }
+    );
+
+    const data = await response.json();
+    return data;
+}
+
+export async function appendSpreadsheetData(
+    spreadsheetId: string,
+    range: string,
+    values: any[][]
+) {
+    const accessToken = localStorage.getItem('google_access_token');
+
+    if (!accessToken) {
+        throw new Error('Non authentifié');
+    }
+
+    const response = await fetch(
+        `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${range}:append?valueInputOption=RAW`,
+        {
+            method: 'POST',
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                values: values
+            })
+        }
+    );
+
+    const data = await response.json();
+    return data;
+}
+
+
+type SheetInfo = {
+    sheets: { title: string; sheetId: number }[];
+};
+
+export async function getSpreadsheetInfo(spreadsheetId: string): Promise<SheetInfo> {
+    const accessToken = localStorage.getItem('google_access_token');
+
+    if (!accessToken) {
+        throw new Error('Non authentifié');
+    }
+
+    const response = await fetch(
+        `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}`,
+        {
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
+            },
+        }
+    );
+
+    const data = await response.json();
+    return {
+        sheets: data.sheets?.map((sheet: any) => ({
+            title: sheet.properties.title,
+            sheetId: sheet.properties.sheetId
+        })) || []
+    };
+}
