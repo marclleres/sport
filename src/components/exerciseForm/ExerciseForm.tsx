@@ -84,7 +84,7 @@ export const ExerciseForm = () => {
             if (data && Array.isArray(data) && data.length > 0) {
                 const exercises = data.map((row: string[]) => {
                     // Colonnes C12:M21 → index 0-10: Exercice, Séries, (vide), Répétitions, Intensité (RIR), Série 1-4, Méthode, Lien YouTube
-                    const [name, sets, , repetitions, rir, ...rest] = row;
+                    const [name, sets, , repetitions, rir] = row;
                     const multiset = row[9] || ''; // Méthode d'intensification en colonne L (index 9)
                     const youtubeLink = row[10] || ''; // Lien YouTube en colonne M (index 10)
 
