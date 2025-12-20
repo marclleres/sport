@@ -1,6 +1,6 @@
 import { useForm, useFieldArray, useWatch } from "react-hook-form"
 import { ExerciseItem } from "./ExerciseItem";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { getSpreadsheetData, writeSpreadsheetData } from "../../services/google/client"
 import { useParams } from "react-router-dom";
 import { defaultExercise, type Inputs } from "./interface";
@@ -61,22 +61,24 @@ export const ExerciseForm = () => {
 
     const watchedExercises = useWatch({ control, name: "exercises" })
     const debouncedExercises = useDebounce(watchedExercises, 2000);
-    const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
 
-    const loadFromSheets = useCallback(async () => {
+    const loadFromSheets = async () => {
         try {
             if (!spreadsheetId) return;
             const semaineAsInt = semaine && parseInt(semaine);
             const data = await getSpreadsheetData(spreadsheetId, `semaine ${semaineAsInt}!A2:H10`);
+            console.log('Données du spreadsheet:', data);
 
-            const precedentExercice: Record<string, Array<{ count: number, weight: number }>> = {};
+            const precedentExercice: Record<string, any[]> = {};
             if (semaineAsInt && semaineAsInt > 1) {
                 const dataBefore = await getSpreadsheetData(spreadsheetId, `semaine ${semaineAsInt - 1}!A2:H10`);
+                console.log('Données du spreadsheet semaine précédente:', dataBefore);
                 if (dataBefore && Array.isArray(dataBefore) && dataBefore.length > 0) {
                     dataBefore.forEach((row: string[]) => {
                         const [name] = row;
                         precedentExercice[name] = parseSetValuesFromRow(row);
                     });
+                    console.log('Dictionnaire précédent:', precedentExercice)
                 }
             }
 
@@ -101,21 +103,24 @@ export const ExerciseForm = () => {
 
                 reset({ exercises });
                 setIsLoaded(true);
-                setHasLoadedOnce(true);
+            } else {
+                // Feuille vide : réinitialiser avec un message
+                reset({ exercises: [] });
+                setIsLoaded(true);
             }
         } catch (error) {
             console.error('Erreur:', error);
         }
-    }, [spreadsheetId, semaine, reset]);
+    };
 
-    const saveToSheets = useCallback(async (data: Inputs) => {
+    const saveToSheets = async (data: Inputs) => {
         try {
             if (!spreadsheetId) return;
             const rows = data.exercises.map(ex => {
-                const row: string[] = [];
+                const row: any[] = [];
                 ex.set.forEach(s => {
-                    if (s?.count && s?.weight) {
-                        const setValue = `${s.count}/${s.weight}kg`;
+                    if (s?.count !== undefined && s?.weight !== undefined && s?.count !== 0 && s?.weight !== 0) {
+                        const setValue = `${s.count || ''}/${s.weight || ''}kg`;
                         row.push(setValue);
                     }
                 });
@@ -124,46 +129,62 @@ export const ExerciseForm = () => {
             });
 
             const values = [...rows];
+            console.log(values);
             const semaineAsInt = semaine && parseInt(semaine);
             await writeSpreadsheetData(spreadsheetId, `semaine ${semaineAsInt}!E2`, values);
         } catch (error) {
             console.error('Erreur lors de la sauvegarde:', error);
         }
-    }, [spreadsheetId, semaine]);
+    };
 
     useEffect(() => {
         loadFromSheets();
-    }, [loadFromSheets]);
+    }, [semaine]);
 
-    // Auto-save avec debounce (skip premier chargement)
+    // Auto-save avec debounce
     useEffect(() => {
-        if (!isLoaded || !hasLoadedOnce || !debouncedExercises) return;
+        if (!isLoaded || !debouncedExercises) return;
 
         saveToSheets({ exercises: debouncedExercises });
-    }, [debouncedExercises, isLoaded, hasLoadedOnce, saveToSheets]);
+    }, [debouncedExercises, isLoaded]);
 
     const onSubmit = async (data: Inputs) => saveToSheets(data);
 
     return (
         <div className="d-flex justify-content-center">
             <form onSubmit={handleSubmit(onSubmit)}>
-                {fields.map((field, exerciseIndex) => (
-                    <ExerciseItem
-                        key={field.id}
-                        exerciseIndex={exerciseIndex}
-                        register={register}
-                        control={control}
-                        remove={remove}
-                    />
-                ))}
+                {fields.length === 0 ? (
+                    <div className="text-center p-4">
+                        <p className="text-muted mb-3">Cette semaine ne contient pas encore d'exercices</p>
+                        <button
+                            type="button"
+                            className="btn btn-primary"
+                            onClick={() => append(defaultExercise)}
+                        >
+                            Ajouter un exercice
+                        </button>
+                    </div>
+                ) : (
+                    <>
+                        {fields.map((field, exerciseIndex) => (
+                            <ExerciseItem
+                                key={field.id}
+                                exerciseIndex={exerciseIndex}
+                                register={register}
+                                control={control}
+                                remove={remove}
+                            />
+                        ))}
 
-                <button
-                    type="button"
-                    className="btn btn-primary mb-3"
-                    onClick={() => append(defaultExercise)}
-                >
-                    Ajouter un exercice
-                </button>
+                        <button
+                            type="button"
+                            className="btn btn-primary mb-3"
+                            onClick={() => append(defaultExercise)}
+                        >
+                            Ajouter un exercice
+                        </button>
+                    </>
+                )}
             </form>
         </div>
     )

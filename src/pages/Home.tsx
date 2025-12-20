@@ -4,6 +4,7 @@ import { SwitchTheme } from '../components/theme';
 import { ExerciseForm } from '../components/exerciseForm';
 import { useSpreadsheetId } from '../hooks/useSpreadsheetId';
 import { storage } from '../services/storage';
+import { WeekSelector } from '../components/weekSelector';
 
 export const Home = () => {
     const navigate = useNavigate();
@@ -31,14 +32,7 @@ export const Home = () => {
                     Program
                 </a>
             </h3>
-            <div className="text-center p-2">
-                <button className="text-center btn btn-primary me-2" onClick={() => navigate('/1')}>
-                    Semaine 1
-                </button>
-                <button className="text-center btn btn-primary me-2" onClick={() => navigate('/2')}>
-                    Semaine 2
-                </button>
-            </div>
+            <WeekSelector />
             <ExerciseForm />
         </div>
     )

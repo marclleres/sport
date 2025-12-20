@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { GoogleLoginButton } from '../components/google/GoogleLoginButton';
+import { GoogleLoginButton } from '../components/google';
 import { storage } from '../services/storage';
 
 export const GoogleAuthPage = () => {
