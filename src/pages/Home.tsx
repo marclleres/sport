@@ -5,6 +5,7 @@ import { ExerciseForm } from '../components/exerciseForm';
 import { useSpreadsheetId } from '../hooks/useSpreadsheetId';
 import { storage } from '../services/storage';
 import { WeekSelector } from '../components/weekSelector';
+import { GroupSelector } from '../components/groupSelector';
 
 export const Home = () => {
     const navigate = useNavigate();
@@ -33,6 +34,7 @@ export const Home = () => {
                 </a>
             </h3>
             <WeekSelector />
+            <GroupSelector />
             <ExerciseForm />
         </div>
     )

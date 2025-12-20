@@ -13,7 +13,7 @@ function App() {
         <Route path="/auth" element={<GoogleAuthPage />} />
         <Route path="/configure" element={<ConfigurePage />} />
         <Route
-          path="/:semaine"
+          path="/week/:semaine/:groupe"
           element={
             <ProtectedRoute>
               <RequireSpreadsheet>
@@ -22,7 +22,17 @@ function App() {
             </ProtectedRoute>
           }
         />
-        <Route path="/" element={<Navigate to="/1" replace />} />
+        <Route
+          path="/week/:semaine"
+          element={
+            <ProtectedRoute>
+              <RequireSpreadsheet>
+                <Home />
+              </RequireSpreadsheet>
+            </ProtectedRoute>
+          }
+        />
+        <Route path="/" element={<Navigate to="/week/1" replace />} />
       </Routes>
     </HashRouter>
   );

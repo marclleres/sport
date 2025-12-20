@@ -8,6 +8,64 @@ const handleAuthError = (response: Response) => {
     }
 };
 
+export async function getSpreadsheetNamedRanges(spreadsheetId: string) {
+    const accessToken = storage.getAccessToken();
+
+    if (!accessToken) {
+        throw new Error('Non authentifié');
+    }
+
+    const response = await fetch(
+        `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}?fields=namedRanges`,
+        {
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
+            },
+        }
+    );
+
+    handleAuthError(response);
+
+    const data = await response.json();
+    const namedRanges = data.namedRanges || [];
+
+    // Retourner uniquement les noms des plages
+    return namedRanges.map((nr: any) => nr.name);
+}
+
+export async function getNamedRangeInfo(spreadsheetId: string, rangeName: string) {
+    const accessToken = storage.getAccessToken();
+
+    if (!accessToken) {
+        throw new Error('Non authentifié');
+    }
+
+    const response = await fetch(
+        `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}?fields=namedRanges`,
+        {
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
+            },
+        }
+    );
+
+    handleAuthError(response);
+
+    const data = await response.json();
+    const namedRange = data.namedRanges?.find((nr: any) => nr.name === rangeName);
+
+    if (namedRange?.range) {
+        return {
+            startRow: namedRange.range.startRowIndex || 0,
+            startColumn: namedRange.range.startColumnIndex || 0,
+            endRow: namedRange.range.endRowIndex || 0,
+            endColumn: namedRange.range.endColumnIndex || 0,
+        };
+    }
+
+    return null;
+}
+
 export async function getSpreadsheetData(spreadsheetId: string, range: string) {
     const accessToken = storage.getAccessToken();
 

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { getSpreadsheetInfo } from '../../services/google/client';
 import { useSpreadsheetId } from '../../hooks/useSpreadsheetId';
 
@@ -11,6 +11,7 @@ type SheetInfo = {
 
 export const WeekSelector = () => {
     const navigate = useNavigate();
+    const { semaine, groupe } = useParams();
     const spreadsheetId = useSpreadsheetId();
     const [sheets, setSheets] = useState<SheetInfo[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -57,8 +58,8 @@ export const WeekSelector = () => {
             {sheets.map(sheet => (
                 <button
                     key={sheet.sheetId}
-                    className="btn btn-primary me-2 mb-2"
-                    onClick={() => navigate(`/${sheet.weekNumber}`)}
+                    className={`btn ${semaine === sheet.weekNumber.toString() ? 'btn-primary' : 'btn-outline-primary'} me-2 mb-2`}
+                    onClick={() => navigate(`/week/${sheet.weekNumber}${groupe ? `/${groupe}` : ''}`)}
                 >
                     Semaine {sheet.weekNumber}
                 </button>
