@@ -164,10 +164,6 @@ export const ExerciseForm = () => {
                 >
                     Ajouter un exercice
                 </button>
-
-                <div className="pb-2">
-                    <input type="submit" className="btn btn-success" value="Soumettre" />
-                </div>
             </form>
         </div>
     )
