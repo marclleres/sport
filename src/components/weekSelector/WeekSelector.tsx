@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getSpreadsheetInfo } from '../services/google/client';
-import { useSpreadsheetId } from '../hooks/useSpreadsheetId';
+import { getSpreadsheetInfo } from '../../services/google/client';
+import { useSpreadsheetId } from '../../hooks/useSpreadsheetId';
 
 type SheetInfo = {
     title: string;

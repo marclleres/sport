@@ -1,6 +1,6 @@
 import { useForm, useFieldArray, useWatch } from "react-hook-form"
 import { ExerciseItem } from "./ExerciseItem";
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { getSpreadsheetData, writeSpreadsheetData } from "../../services/google/client"
 import { useParams } from "react-router-dom";
 import { defaultExercise, type Inputs } from "./interface";
@@ -138,6 +138,7 @@ export const ExerciseForm = () => {
     };
 
     useEffect(() => {
+        setIsLoaded(false);
         loadFromSheets();
     }, [semaine]);
 
@@ -152,40 +153,61 @@ export const ExerciseForm = () => {
 
     return (
         <div className="d-flex justify-content-center">
-            <form onSubmit={handleSubmit(onSubmit)}>
-                {fields.length === 0 ? (
-                    <div className="text-center p-4">
-                        <p className="text-muted mb-3">Cette semaine ne contient pas encore d'exercices</p>
-                        <button
-                            type="button"
-                            className="btn btn-primary"
-                            onClick={() => append(defaultExercise)}
-                        >
-                            Ajouter un exercice
-                        </button>
-                    </div>
-                ) : (
-                    <>
-                        {fields.map((field, exerciseIndex) => (
-                            <ExerciseItem
-                                key={field.id}
-                                exerciseIndex={exerciseIndex}
-                                register={register}
-                                control={control}
-                                remove={remove}
-                            />
-                        ))}
+            {!isLoaded ? (
+                <div className="w-100" style={{ maxWidth: '600px' }}>
+                    {[1, 2, 3].map((i) => (
+                        <div key={i} className="card mb-3">
+                            <div className="card-header">
+                                <div className="placeholder-glow">
+                                    <span className="placeholder col-6"></span>
+                                </div>
+                            </div>
+                            <div className="card-body">
+                                <div className="placeholder-glow">
+                                    <span className="placeholder col-4 mb-2"></span>
+                                    <span className="placeholder col-8 mb-2"></span>
+                                    <span className="placeholder col-6"></span>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            ) : (
+                <form onSubmit={handleSubmit(onSubmit)}>
+                    {fields.length === 0 ? (
+                        <div className="text-center p-4">
+                            <p className="text-muted mb-3">Cette semaine ne contient pas encore d'exercices</p>
+                            <button
+                                type="button"
+                                className="btn btn-primary"
+                                onClick={() => append(defaultExercise)}
+                            >
+                                Ajouter un exercice
+                            </button>
+                        </div>
+                    ) : (
+                        <>
+                            {fields.map((field, exerciseIndex) => (
+                                <ExerciseItem
+                                    key={field.id}
+                                    exerciseIndex={exerciseIndex}
+                                    register={register}
+                                    control={control}
+                                    remove={remove}
+                                />
+                            ))}
 
-                        <button
-                            type="button"
-                            className="btn btn-primary mb-3"
-                            onClick={() => append(defaultExercise)}
-                        >
-                            Ajouter un exercice
-                        </button>
-                    </>
-                )}
-            </form>
+                            <button
+                                type="button"
+                                className="btn btn-primary mb-3"
+                                onClick={() => append(defaultExercise)}
+                            >
+                                Ajouter un exercice
+                            </button>
+                        </>
+                    )}
+                </form>
+            )}
         </div>
     )
 }
