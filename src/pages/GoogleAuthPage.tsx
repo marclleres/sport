@@ -9,7 +9,7 @@ export const GoogleAuthPage = () => {
     useEffect(() => {
         const token = storage.getAccessToken();
         if (token) {
-            navigate('/1');
+            navigate('/week/1');
         }
     }, [navigate]);
 

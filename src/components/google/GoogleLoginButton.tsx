@@ -21,7 +21,7 @@ export const GoogleLoginButton = () => {
 
             // Stocker le token pour les requêtes Google Sheets
             storage.setAccessToken(tokenResponse.access_token);
-            navigate('/1');
+            navigate('/week/1');
         },
         scope: 'https://www.googleapis.com/auth/spreadsheets',
     });
