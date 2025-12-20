@@ -3,7 +3,9 @@ export interface Exercise {
     set: Set[],
     setPlaceHolder: Set[]
     repetitions?: string
+    rir?: string
     multiset?: string
+    youtubeLink?: string
 };
 
 export interface Set {

@@ -10,6 +10,7 @@ export const ExerciseItem = ({ exerciseIndex, register, control, remove }: Exerc
     });
     const multiset = useWatch({ control, name: `exercises.${exerciseIndex}.multiset` });
     const setPlaceHolder = useWatch({ control, name: `exercises.${exerciseIndex}.setPlaceHolder` }) || [];
+    const youtubeLink = useWatch({ control, name: `exercises.${exerciseIndex}.youtubeLink` });
 
     return (
         <div className="card mb-3">
@@ -19,9 +20,7 @@ export const ExerciseItem = ({ exerciseIndex, register, control, remove }: Exerc
                     style={{ cursor: 'pointer', flex: 1 }}
                     onClick={() => setIsOpen(!isOpen)}
                 >
-                    <span className="me-2" style={{ fontSize: '12px' }}>
-                        {isOpen ? '▼' : '▶'}
-                    </span>
+                    <i className={`bi ${isOpen ? 'bi-chevron-down' : 'bi-chevron-right'} me-2`}></i>
                     <input
                         {...register(`exercises.${exerciseIndex}.exercise`)}
                         className="form-control"
@@ -29,6 +28,18 @@ export const ExerciseItem = ({ exerciseIndex, register, control, remove }: Exerc
                         onClick={(e) => e.stopPropagation()}
                         readOnly={true}
                     />
+                    {youtubeLink && (
+                        <a
+                            href={youtubeLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="btn btn-link text-decoration-none ms-2 p-0"
+                            onClick={(e) => e.stopPropagation()}
+                            title="Voir la vidéo"
+                        >
+                            <i className="bi bi-youtube text-danger" style={{ fontSize: '24px' }}></i>
+                        </a>
+                    )}
                 </div>
                 <button
                     type="button"
@@ -41,25 +52,43 @@ export const ExerciseItem = ({ exerciseIndex, register, control, remove }: Exerc
 
             {isOpen && (
                 <div className="card-body">
-                    <div className="d-flex gap-3 align-items-baseline">
+                    <div className="d-flex gap-2 align-items-baseline justify-content-between">
                         <div className="form-check mb-3">
                             <input
                                 {...register(`exercises.${exerciseIndex}.multiset`)}
                                 type="checkbox"
                                 className="form-check-input"
                                 id={`multiset-${exerciseIndex}`}
+                                disabled
                             />
                             <label className="form-check-label text-capitalize" htmlFor={`multiset-${exerciseIndex}`}>
                                 {multiset || "Multiset"}
                             </label>
                         </div>
-                        <input
-                            {...register(`exercises.${exerciseIndex}.repetitions`)}
-                            className="form-control"
-                            placeholder="expected repetitions (e.g., 10-12)"
-                            onClick={(e) => e.stopPropagation()}
-                            readOnly={true}
-                        />
+                        <div style={{ width: '110px' }}>
+                            <div className="input-group input-group-sm">
+                                <span className="input-group-text">Rép</span>
+                                <input
+                                    {...register(`exercises.${exerciseIndex}.repetitions`)}
+                                    className="form-control"
+                                    placeholder="10-12"
+                                    onClick={(e) => e.stopPropagation()}
+                                    readOnly={true}
+                                />
+                            </div>
+                        </div>
+                        <div style={{ width: '85px' }}>
+                            <div className="input-group input-group-sm">
+                                <span className="input-group-text">RIR</span>
+                                <input
+                                    {...register(`exercises.${exerciseIndex}.rir`)}
+                                    className="form-control"
+                                    placeholder=""
+                                    onClick={(e) => e.stopPropagation()}
+                                    readOnly={true}
+                                />
+                            </div>
+                        </div>
                     </div>
                     <div className="">
                         <div className="d-flex gap-2 mb-2 align-items-center text-muted">

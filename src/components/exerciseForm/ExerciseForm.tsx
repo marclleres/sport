@@ -1,20 +1,21 @@
 import { useForm, useFieldArray, useWatch } from "react-hook-form"
 import { ExerciseItem } from "./ExerciseItem";
-import { useEffect, useState } from "react";
+import { ExerciseFormSkeleton } from "./ExerciseFormSkeleton";
+import { useEffect, useState, useRef } from "react";
 import { getSpreadsheetData, writeSpreadsheetData } from "../../services/google/client"
 import { useParams } from "react-router-dom";
 import { defaultExercise, type Inputs } from "./interface";
 import { useSpreadsheetId } from "../../hooks/useSpreadsheetId";
 
-const parseSetValuesFromRow = (row: string[], startIndex: number = 4, endIndex: number = 7): Array<{ count: number, weight: number }> => {
+const parseSetValuesFromRow = (row: string[], startIndex: number = 5, endIndex: number = 8): Array<{ count: number, weight: number }> => {
     const setValues = [];
     for (let i = startIndex; i <= endIndex; i++) {
         if (row[i]) {
-            const match = row[i].match(/(\d+)\/(\d+)kg/);
+            const match = row[i].match(/(\d+)\/(\d+(?:\.\d+)?)kg/);
             if (match) {
                 setValues.push({
                     count: parseInt(match[1]),
-                    weight: parseInt(match[2])
+                    weight: parseFloat(match[2])
                 });
             }
         }
@@ -54,6 +55,7 @@ export const ExerciseForm = () => {
     const { semaine } = useParams()
     const spreadsheetId = useSpreadsheetId()
     const [isLoaded, setIsLoaded] = useState(false)
+    const justLoadedRef = useRef(false)
     const { fields, append, remove } = useFieldArray({
         control,
         name: "exercises"
@@ -66,47 +68,55 @@ export const ExerciseForm = () => {
         try {
             if (!spreadsheetId) return;
             const semaineAsInt = semaine && parseInt(semaine);
-            const data = await getSpreadsheetData(spreadsheetId, `semaine ${semaineAsInt}!A2:H10`);
-            console.log('Données du spreadsheet:', data);
+            const data = await getSpreadsheetData(spreadsheetId, `semaine ${semaineAsInt}!C12:M21`);
 
             const precedentExercice: Record<string, any[]> = {};
             if (semaineAsInt && semaineAsInt > 1) {
-                const dataBefore = await getSpreadsheetData(spreadsheetId, `semaine ${semaineAsInt - 1}!A2:H10`);
-                console.log('Données du spreadsheet semaine précédente:', dataBefore);
+                const dataBefore = await getSpreadsheetData(spreadsheetId, `semaine ${semaineAsInt - 1}!C12:M21`);
                 if (dataBefore && Array.isArray(dataBefore) && dataBefore.length > 0) {
                     dataBefore.forEach((row: string[]) => {
                         const [name] = row;
                         precedentExercice[name] = parseSetValuesFromRow(row);
                     });
-                    console.log('Dictionnaire précédent:', precedentExercice)
                 }
             }
 
             if (data && Array.isArray(data) && data.length > 0) {
                 const exercises = data.map((row: string[]) => {
-                    const [name, sets, repetitions, multiset] = row;
+                    // Colonnes C12:M21 → index 0-10: Exercice, Séries, (vide), Répétitions, Intensité (RIR), Série 1-4, Méthode, Lien YouTube
+                    const [name, sets, , repetitions, rir, ...rest] = row;
+                    const multiset = row[9] || ''; // Méthode d'intensification en colonne L (index 9)
+                    const youtubeLink = row[10] || ''; // Lien YouTube en colonne M (index 10)
+
                     const currentSetValues = parseSetValuesFromRow(row);
                     return {
                         exercise: name,
-                        set: Array.from({ length: parseInt(sets) }, (_, index) => ({
-                            count: currentSetValues[index]?.count || undefined,
-                            weight: currentSetValues[index]?.weight || undefined
-                        })),
-                        setPlaceHolder: Array.from({ length: parseInt(sets) }, (_, index) => ({
+                        set: Array.from({ length: parseInt(sets) || 0 }, (_, index) => {
+                            const current = currentSetValues[index];
+                            return {
+                                count: current?.count,
+                                weight: current?.weight
+                            };
+                        }),
+                        setPlaceHolder: Array.from({ length: parseInt(sets) || 0 }, (_, index) => ({
                             count: precedentExercice[name]?.[index]?.count || undefined,
                             weight: precedentExercice[name]?.[index]?.weight || undefined
                         })),
                         repetitions: repetitions,
-                        multiset: multiset
+                        rir: rir,
+                        multiset: multiset,
+                        youtubeLink: youtubeLink
                     };
                 });
 
                 reset({ exercises });
                 setIsLoaded(true);
+                justLoadedRef.current = true;
             } else {
                 // Feuille vide : réinitialiser avec un message
                 reset({ exercises: [] });
                 setIsLoaded(true);
+                justLoadedRef.current = true;
             }
         } catch (error) {
             console.error('Erreur:', error);
@@ -120,8 +130,10 @@ export const ExerciseForm = () => {
                 const row: any[] = [];
                 ex.set.forEach(s => {
                     if (s?.count !== undefined && s?.weight !== undefined && s?.count !== 0 && s?.weight !== 0) {
-                        const setValue = `${s.count || ''}/${s.weight || ''}kg`;
+                        const setValue = `${s.count}/${s.weight}kg`;
                         row.push(setValue);
+                    } else {
+                        row.push('');
                     }
                 });
 
@@ -129,9 +141,9 @@ export const ExerciseForm = () => {
             });
 
             const values = [...rows];
-            console.log(values);
             const semaineAsInt = semaine && parseInt(semaine);
-            await writeSpreadsheetData(spreadsheetId, `semaine ${semaineAsInt}!E2`, values);
+            // Écriture dans les colonnes H à K (Série 1 à 4) à partir de la ligne 12
+            await writeSpreadsheetData(spreadsheetId, `semaine ${semaineAsInt}!H12`, values);
         } catch (error) {
             console.error('Erreur lors de la sauvegarde:', error);
         }
@@ -142,9 +154,14 @@ export const ExerciseForm = () => {
         loadFromSheets();
     }, [semaine]);
 
-    // Auto-save avec debounce
+    // Auto-save avec debounce (skip si on vient de charger)
     useEffect(() => {
         if (!isLoaded || !debouncedExercises) return;
+
+        if (justLoadedRef.current) {
+            justLoadedRef.current = false;
+            return;
+        }
 
         saveToSheets({ exercises: debouncedExercises });
     }, [debouncedExercises, isLoaded]);
@@ -154,24 +171,7 @@ export const ExerciseForm = () => {
     return (
         <div className="d-flex justify-content-center">
             {!isLoaded ? (
-                <div className="w-100" style={{ maxWidth: '600px' }}>
-                    {[1, 2, 3].map((i) => (
-                        <div key={i} className="card mb-3">
-                            <div className="card-header">
-                                <div className="placeholder-glow">
-                                    <span className="placeholder col-6"></span>
-                                </div>
-                            </div>
-                            <div className="card-body">
-                                <div className="placeholder-glow">
-                                    <span className="placeholder col-4 mb-2"></span>
-                                    <span className="placeholder col-8 mb-2"></span>
-                                    <span className="placeholder col-6"></span>
-                                </div>
-                            </div>
-                        </div>
-                    ))}
-                </div>
+                <ExerciseFormSkeleton />
             ) : (
                 <form onSubmit={handleSubmit(onSubmit)}>
                     {fields.length === 0 ? (

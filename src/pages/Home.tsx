@@ -16,7 +16,7 @@ export const Home = () => {
     };
 
     return (
-        <div className="container">
+        <div className="container px-3">
             <div className="d-flex align-items-center justify-content-center gap-3 py-3">
                 <button className="btn btn-danger" onClick={handleLogout}>
                     Déconnexion
