@@ -1,13 +1,15 @@
+import { storage } from '../storage';
+
 const handleAuthError = (response: Response) => {
     if (response.status === 401 || response.status === 403) {
-        localStorage.removeItem('google_access_token');
+        storage.removeAccessToken();
         window.location.href = '/#/auth';
         throw new Error('Session expirée, redirection vers la connexion...');
     }
 };
 
 export async function getSpreadsheetData(spreadsheetId: string, range: string) {
-    const accessToken = localStorage.getItem('google_access_token');
+    const accessToken = storage.getAccessToken();
 
     if (!accessToken) {
         throw new Error('Non authentifié');
@@ -33,7 +35,7 @@ export async function writeSpreadsheetData(
     range: string,
     values: any[][]
 ) {
-    const accessToken = localStorage.getItem('google_access_token');
+    const accessToken = storage.getAccessToken();
 
     if (!accessToken) {
         throw new Error('Non authentifié');
@@ -64,7 +66,7 @@ export async function appendSpreadsheetData(
     range: string,
     values: any[][]
 ) {
-    const accessToken = localStorage.getItem('google_access_token');
+    const accessToken = storage.getAccessToken();
 
     if (!accessToken) {
         throw new Error('Non authentifié');
@@ -96,7 +98,7 @@ type SheetInfo = {
 };
 
 export async function getSpreadsheetInfo(spreadsheetId: string): Promise<SheetInfo> {
-    const accessToken = localStorage.getItem('google_access_token');
+    const accessToken = storage.getAccessToken();
 
     if (!accessToken) {
         throw new Error('Non authentifié');

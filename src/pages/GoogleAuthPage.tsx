@@ -1,12 +1,13 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { GoogleLoginButton } from '../component/google/GoogleLoginButton';
+import { GoogleLoginButton } from '../components/google/GoogleLoginButton';
+import { storage } from '../services/storage';
 
 export const GoogleAuthPage = () => {
     const navigate = useNavigate();
 
     useEffect(() => {
-        const token = localStorage.getItem('google_access_token');
+        const token = storage.getAccessToken();
         if (token) {
             navigate('/1');
         }

@@ -1,5 +1,6 @@
 import { Navigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
+import { storage } from '../services/storage';
 
 interface ProtectedRouteProps {
     children: React.ReactNode;
@@ -7,7 +8,7 @@ interface ProtectedRouteProps {
 
 export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
     const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
-    const token = localStorage.getItem('google_access_token');
+    const token = storage.getAccessToken();
 
     useEffect(() => {
         const verifyToken = async () => {
@@ -26,12 +27,12 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
                     setIsAuthenticated(true);
                 } else {
                     // Token invalide ou expiré
-                    localStorage.removeItem('google_access_token');
+                    storage.removeAccessToken();
                     setIsAuthenticated(false);
                 }
             } catch (error) {
                 console.error('Erreur de vérification du token:', error);
-                localStorage.removeItem('google_access_token');
+                storage.removeAccessToken();
                 setIsAuthenticated(false);
             }
         };

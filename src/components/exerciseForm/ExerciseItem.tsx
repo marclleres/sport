@@ -1,8 +1,8 @@
 import { useFieldArray, useWatch } from "react-hook-form";
 import { useState } from "react";
-import { defaultExercise } from "./interface";
+import type { ExerciseItemProps } from "./types";
 
-export const ExerciseItem = ({ exerciseIndex, register, control, remove }: any) => {
+export const ExerciseItem = ({ exerciseIndex, register, control, remove }: ExerciseItemProps) => {
     const [isOpen, setIsOpen] = useState(true);
     const setsFieldArray = useFieldArray({
         control,
@@ -41,7 +41,7 @@ export const ExerciseItem = ({ exerciseIndex, register, control, remove }: any) 
 
             {isOpen && (
                 <div className="card-body">
-                    <div className="d-flex gap-3  align-items-baseline">
+                    <div className="d-flex gap-3 align-items-baseline">
                         <div className="form-check mb-3">
                             <input
                                 {...register(`exercises.${exerciseIndex}.multiset`)}
@@ -99,7 +99,7 @@ export const ExerciseItem = ({ exerciseIndex, register, control, remove }: any) 
                             <button
                                 type="button"
                                 className="btn btn-sm btn-secondary mt-2"
-                                onClick={() => setsFieldArray.append(defaultExercise)}
+                                onClick={() => setsFieldArray.append({ count: undefined, weight: undefined })}
                                 disabled={setsFieldArray.fields.length >= 4}
                                 style={setsFieldArray.fields.length >= 4 ? { pointerEvents: 'none' } : {}}
                             >

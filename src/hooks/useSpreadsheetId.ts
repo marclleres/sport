@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react';
+import { storage } from '../services/storage';
 
 export const useSpreadsheetId = (): string | null => {
     const [spreadsheetId, setSpreadsheetId] = useState<string | null>(
-        localStorage.getItem('spreadsheet_id')
+        storage.getSpreadsheetId()
     );
 
     useEffect(() => {
         const handleStorageChange = () => {
-            setSpreadsheetId(localStorage.getItem('spreadsheet_id'));
+            setSpreadsheetId(storage.getSpreadsheetId());
         };
 
         window.addEventListener('storage', handleStorageChange);

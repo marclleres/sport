@@ -1,6 +1,6 @@
 import { useForm, useFieldArray, useWatch } from "react-hook-form"
 import { ExerciseItem } from "./ExerciseItem";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { getSpreadsheetData, writeSpreadsheetData } from "../../services/google/client"
 import { useParams } from "react-router-dom";
 import { defaultExercise, type Inputs } from "./interface";
@@ -20,6 +20,23 @@ const parseSetValuesFromRow = (row: string[], startIndex: number = 4, endIndex: 
         }
     }
     return setValues;
+};
+
+// Hook de debounce personnalisé
+const useDebounce = <T,>(value: T, delay: number): T => {
+    const [debouncedValue, setDebouncedValue] = useState<T>(value);
+
+    useEffect(() => {
+        const handler = setTimeout(() => {
+            setDebouncedValue(value);
+        }, delay);
+
+        return () => {
+            clearTimeout(handler);
+        };
+    }, [value, delay]);
+
+    return debouncedValue;
 };
 
 export const ExerciseForm = () => {
@@ -43,24 +60,23 @@ export const ExerciseForm = () => {
     })
 
     const watchedExercises = useWatch({ control, name: "exercises" })
+    const debouncedExercises = useDebounce(watchedExercises, 2000);
+    const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
 
-    const loadFromSheets = async () => {
+    const loadFromSheets = useCallback(async () => {
         try {
             if (!spreadsheetId) return;
             const semaineAsInt = semaine && parseInt(semaine);
             const data = await getSpreadsheetData(spreadsheetId, `semaine ${semaineAsInt}!A2:H10`);
-            console.log('Données du spreadsheet:', data);
 
-            const precedentExercice: Record<string, any[]> = {};
+            const precedentExercice: Record<string, Array<{ count: number, weight: number }>> = {};
             if (semaineAsInt && semaineAsInt > 1) {
                 const dataBefore = await getSpreadsheetData(spreadsheetId, `semaine ${semaineAsInt - 1}!A2:H10`);
-                console.log('Données du spreadsheet semaine précédente:', dataBefore);
                 if (dataBefore && Array.isArray(dataBefore) && dataBefore.length > 0) {
                     dataBefore.forEach((row: string[]) => {
                         const [name] = row;
                         precedentExercice[name] = parseSetValuesFromRow(row);
                     });
-                    console.log('Dictionnaire précédent:', precedentExercice)
                 }
             }
 
@@ -85,20 +101,21 @@ export const ExerciseForm = () => {
 
                 reset({ exercises });
                 setIsLoaded(true);
+                setHasLoadedOnce(true);
             }
         } catch (error) {
             console.error('Erreur:', error);
         }
-    };
+    }, [spreadsheetId, semaine, reset]);
 
-    const saveToSheets = async (data: Inputs) => {
+    const saveToSheets = useCallback(async (data: Inputs) => {
         try {
             if (!spreadsheetId) return;
             const rows = data.exercises.map(ex => {
-                const row: any[] = [];
+                const row: string[] = [];
                 ex.set.forEach(s => {
-                    if (s?.count !== undefined && s?.weight !== undefined && s?.count !== 0 && s?.weight !== 0) {
-                        const setValue = `${s.count || ''}/${s.weight || ''}kg`;
+                    if (s?.count && s?.weight) {
+                        const setValue = `${s.count}/${s.weight}kg`;
                         row.push(setValue);
                     }
                 });
@@ -107,28 +124,23 @@ export const ExerciseForm = () => {
             });
 
             const values = [...rows];
-            console.log(values);
             const semaineAsInt = semaine && parseInt(semaine);
             await writeSpreadsheetData(spreadsheetId, `semaine ${semaineAsInt}!E2`, values);
         } catch (error) {
             console.error('Erreur lors de la sauvegarde:', error);
         }
-    };
+    }, [spreadsheetId, semaine]);
 
     useEffect(() => {
         loadFromSheets();
-    }, [semaine]);
+    }, [loadFromSheets]);
 
-    // Auto-save après 2 secondes d'inactivité
+    // Auto-save avec debounce (skip premier chargement)
     useEffect(() => {
-        if (!isLoaded || !watchedExercises) return;
+        if (!isLoaded || !hasLoadedOnce || !debouncedExercises) return;
 
-        const timer = setTimeout(() => {
-            saveToSheets({ exercises: watchedExercises });
-        }, 2000);
-
-        return () => clearTimeout(timer);
-    }, [watchedExercises, isLoaded]);
+        saveToSheets({ exercises: debouncedExercises });
+    }, [debouncedExercises, isLoaded, hasLoadedOnce, saveToSheets]);
 
     const onSubmit = async (data: Inputs) => saveToSheets(data);
 

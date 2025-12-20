@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { storage } from '../services/storage';
 
 export const ConfigurePage = () => {
     const navigate = useNavigate();
     const [spreadsheetId, setSpreadsheetId] = useState(
-        localStorage.getItem('spreadsheet_id') || ''
+        storage.getSpreadsheetId() || ''
     );
 
     const handleSave = () => {
@@ -12,7 +13,7 @@ export const ConfigurePage = () => {
             alert('Veuillez entrer un ID de spreadsheet');
             return;
         }
-        localStorage.setItem('spreadsheet_id', spreadsheetId);
+        storage.setSpreadsheetId(spreadsheetId);
         alert('ID du spreadsheet sauvegardé !');
         navigate('/');
     };
@@ -33,13 +34,13 @@ export const ConfigurePage = () => {
                                 className="form-control mb-3"
                                 value={spreadsheetId}
                                 onChange={(e) => setSpreadsheetId(e.target.value)}
-                                placeholder="1HHKuHdkRi21bL2u_O1snVZiYnAzZKeFCXwZUkqeQ9DY"
+                                placeholder="Coller l'ID de votre Google Spreadsheet"
                             />
                             <div className="d-flex gap-2">
                                 <button className="btn btn-primary" onClick={handleSave}>
                                     Enregistrer
                                 </button>
-                                {localStorage.getItem('spreadsheet_id') && (
+                                {storage.getSpreadsheetId() && (
                                     <button className="btn btn-secondary" onClick={() => navigate('/')}>
                                         Annuler
                                     </button>

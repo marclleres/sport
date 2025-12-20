@@ -1,6 +1,7 @@
 import { useGoogleLogin } from '@react-oauth/google';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { storage } from '../../services/storage';
 
 export const GoogleLoginButton = () => {
     const [user, setUser] = useState<any>(null);
@@ -19,7 +20,7 @@ export const GoogleLoginButton = () => {
             setUser(userData);
 
             // Stocker le token pour les requêtes Google Sheets
-            localStorage.setItem('google_access_token', tokenResponse.access_token);
+            storage.setAccessToken(tokenResponse.access_token);
             navigate('/1');
         },
         scope: 'https://www.googleapis.com/auth/spreadsheets',
@@ -27,7 +28,7 @@ export const GoogleLoginButton = () => {
 
     const logout = () => {
         setUser(null);
-        localStorage.removeItem('google_access_token');
+        storage.removeAccessToken();
     };
 
     return (
