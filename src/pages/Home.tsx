@@ -1,15 +1,19 @@
 
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { SwitchTheme } from '../components/theme';
 import { ExerciseForm } from '../components/exerciseForm';
 import { useSpreadsheetId } from '../hooks/useSpreadsheetId';
 import { storage } from '../services/storage';
 import { WeekSelector } from '../components/weekSelector';
 import { GroupSelector } from '../components/groupSelector';
+import { ExerciseFormSkeleton } from '../components/exerciseForm/ExerciseFormSkeleton';
+import { useState } from 'react';
 
 export const Home = () => {
     const navigate = useNavigate();
     const spreadsheetId = useSpreadsheetId();
+    const { groupe } = useParams();
+    const [isGroupLoading, setIsGroupLoading] = useState(true);
 
     const handleLogout = () => {
         storage.removeAccessToken();
@@ -34,8 +38,10 @@ export const Home = () => {
                 </a>
             </h3>
             <WeekSelector />
-            <GroupSelector />
-            <ExerciseForm />
+            <GroupSelector onLoadingChange={setIsGroupLoading} />
+            <div className="d-flex justify-content-center">
+                {groupe && !isGroupLoading ? <ExerciseForm /> : <ExerciseFormSkeleton />}
+            </div>
         </div>
     )
 }

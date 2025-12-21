@@ -29,7 +29,6 @@ export async function getSpreadsheetNamedRanges(spreadsheetId: string) {
     const data = await response.json();
     const namedRanges = data.namedRanges || [];
 
-    // Retourner uniquement les noms des plages
     return namedRanges.map((nr: any) => nr.name);
 }
 

@@ -7,7 +7,6 @@ import { defaultExercise, type Inputs } from "./interface";
 import { useSpreadsheetId } from "../../hooks/useSpreadsheetId";
 import { loadExercisesFromSheets, saveExercisesToSheets } from "../../services/exercise";
 
-// Hook de debounce personnalisé
 const useDebounce = <T,>(value: T, delay: number): T => {
     const [debouncedValue, setDebouncedValue] = useState<T>(value);
 
@@ -40,6 +39,7 @@ export const ExerciseForm = () => {
     const spreadsheetId = useSpreadsheetId()
     const [isLoaded, setIsLoaded] = useState(false)
     const justLoadedRef = useRef(false)
+    const lastLoadedGroupRef = useRef<string | null>(null)
     const { fields, append, remove } = useFieldArray({
         control,
         name: "exercises"
@@ -56,16 +56,18 @@ export const ExerciseForm = () => {
 
             if (exercises.length > 0) {
                 reset({ exercises });
+                lastLoadedGroupRef.current = groupe;
                 setIsLoaded(true);
                 justLoadedRef.current = true;
             } else {
-                // Feuille vide : réinitialiser avec un message
                 reset({ exercises: [] });
+                lastLoadedGroupRef.current = groupe;
                 setIsLoaded(true);
                 justLoadedRef.current = true;
             }
         } catch (error) {
             console.error('Erreur:', error);
+            setIsLoaded(true);
         }
     };
 
@@ -79,11 +81,12 @@ export const ExerciseForm = () => {
     };
 
     useEffect(() => {
-        setIsLoaded(false);
+        if (lastLoadedGroupRef.current !== groupe) {
+            setIsLoaded(false);
+        }
         loadFromSheets();
     }, [semaine, groupe]);
 
-    // Auto-save avec debounce (skip si on vient de charger)
     useEffect(() => {
         if (!isLoaded || !debouncedExercises) return;
 
@@ -98,7 +101,7 @@ export const ExerciseForm = () => {
     const onSubmit = async (data: Inputs) => saveToSheets(data);
 
     return (
-        <div className="d-flex justify-content-center">
+        <>
             {!isLoaded ? (
                 <ExerciseFormSkeleton />
             ) : (
@@ -140,6 +143,6 @@ export const ExerciseForm = () => {
                     )}
                 </form>
             )}
-        </div>
+        </>
     )
 }

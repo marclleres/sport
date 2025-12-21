@@ -34,7 +34,6 @@ export const loadExercisesFromSheets = async (
     const semaineAsInt = parseInt(semaine);
     const rangeName = `semaine${semaineAsInt}_${groupe}`;
 
-    // Vérifier si la plage nommée existe
     const namedRanges = await getSpreadsheetNamedRanges(spreadsheetId);
     if (!namedRanges.includes(rangeName)) {
         console.warn(`Plage nommée '${rangeName}' non trouvée, retour d'une liste vide`);
@@ -42,13 +41,11 @@ export const loadExercisesFromSheets = async (
     }
 
     const rawData = await getSpreadsheetData(spreadsheetId, rangeName);
-    // Ignorer la première colonne et filtrer les lignes vides ou d'en-tête
     const data = rawData?.map((row: string[]) => row.slice(1)).filter((row: string[]) => row[0] && row[0] !== 'Exercice');
 
     const precedentExercice: Record<string, any[]> = {};
     if (semaineAsInt > 1) {
         const prevRangeName = `semaine${semaineAsInt - 1}_${groupe}`;
-        // Vérifier si la plage précédente existe avant de la charger
         if (namedRanges.includes(prevRangeName)) {
             const rawDataBefore = await getSpreadsheetData(spreadsheetId, prevRangeName);
             const dataBefore = rawDataBefore?.map((row: string[]) => row.slice(1)).filter((row: string[]) => row[0] && row[0] !== 'Exercice');
@@ -64,8 +61,8 @@ export const loadExercisesFromSheets = async (
     if (data && Array.isArray(data) && data.length > 0) {
         return data.map((row: string[]) => {
             const [name, sets, , repetitions, rir] = row;
-            const multiset = row[9] || ''; // Méthode d'intensification en colonne L (index 9)
-            const youtubeLink = row[10] || ''; // Lien YouTube en colonne M (index 10)
+            const multiset = row[9] || '';
+            const youtubeLink = row[10] || '';
 
             const currentSetValues = parseSetValuesFromRow(row);
             return {
@@ -121,9 +118,9 @@ export const saveExercisesToSheets = async (
     });
 
     const values = [...rows];
-    const seriesColumnIndex = rangeInfo.startColumn + 6; // +6 car: 0=ignoré, 1=Exercice, 2=Séries, 3=vide, 4=Répétitions, 5=RIR, 6=Série1
-    const seriesColumnLetter = String.fromCharCode(65 + seriesColumnIndex); // Convertir index en lettre (A=65)
-    const startRow = rangeInfo.startRow + 2; // +2 pour passer l'en-tête et commencer aux données (0-indexed + 1 pour l'en-tête + 1 pour passer à la ligne suivante)
+    const seriesColumnIndex = rangeInfo.startColumn + 6;
+    const seriesColumnLetter = String.fromCharCode(65 + seriesColumnIndex);
+    const startRow = rangeInfo.startRow + 2;
 
     await writeSpreadsheetData(spreadsheetId, `'semaine ${semaine_Int}'!${seriesColumnLetter}${startRow}`, values);
 };

@@ -3,12 +3,20 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { getSpreadsheetNamedRanges } from '../../services/google/client';
 import { useSpreadsheetId } from '../../hooks/useSpreadsheetId';
 
-export const GroupSelector = () => {
+interface GroupSelectorProps {
+    onLoadingChange?: (loading: boolean) => void;
+}
+
+export const GroupSelector = ({ onLoadingChange }: GroupSelectorProps = {}) => {
     const { semaine, groupe } = useParams();
     const navigate = useNavigate();
     const spreadsheetId = useSpreadsheetId();
     const [namedRanges, setNamedRanges] = useState<string[]>([]);
     const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        onLoadingChange?.(loading);
+    }, [loading, onLoadingChange]);
 
     useEffect(() => {
         const loadNamedRanges = async () => {
@@ -18,30 +26,45 @@ export const GroupSelector = () => {
                 setLoading(true);
                 const allRanges = await getSpreadsheetNamedRanges(spreadsheetId);
 
-                // Filtrer les plages pour la semaine actuelle (format: semaineX_Groupe)
                 const prefix = `semaine${semaine}_`;
                 const weekRanges = allRanges
                     .filter((name: string) => name.startsWith(prefix))
-                    .map((name: string) => name.replace(prefix, '')) // Extraire juste le nom du groupe
-                    .sort(); // Trier alphabétiquement pour un ordre cohérent
+                    .map((name: string) => name.replace(prefix, ''))
+                    .sort();
 
                 setNamedRanges(weekRanges);
 
-                // Si aucun groupe n'est sélectionné et qu'il y a des ranges, sélectionner le premier
-                if (!groupe && weekRanges.length > 0 && semaine) {
-                    navigate(`/week/${semaine}/${weekRanges[0]}`, { replace: true });
+                if (weekRanges.length > 0 && semaine) {
+                    if (!groupe || !weekRanges.includes(groupe)) {
+                        navigate(`/week/${semaine}/${weekRanges[0]}`, { replace: true });
+                        return;
+                    }
                 }
+
+                setLoading(false);
             } catch (error) {
                 console.error('Erreur lors du chargement des plages nommées:', error);
-            } finally {
                 setLoading(false);
             }
         };
 
         loadNamedRanges();
-    }, [spreadsheetId, semaine]);
+    }, [spreadsheetId, semaine, groupe]);
 
-    if (loading || namedRanges.length === 0) {
+    if (loading) {
+        return (
+            <div className="d-flex justify-content-center gap-2 mb-3 flex-wrap">
+                <div className="btn btn-sm btn-outline-primary placeholder-glow">
+                    <span className="placeholder col-12" style={{ width: '80px' }}></span>
+                </div>
+                <div className="btn btn-sm btn-outline-primary placeholder-glow">
+                    <span className="placeholder col-12" style={{ width: '80px' }}></span>
+                </div>
+            </div>
+        );
+    }
+
+    if (namedRanges.length === 0) {
         return null;
     }
 
