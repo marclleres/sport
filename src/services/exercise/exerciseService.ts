@@ -97,6 +97,13 @@ export const saveExercisesToSheets = async (
 ): Promise<void> => {
     const semaine_Int = parseInt(semaine);
     const rangeName = `semaine${semaine_Int}_${groupe}`;
+
+    const namedRanges = await getSpreadsheetNamedRanges(spreadsheetId);
+    if (!namedRanges.includes(rangeName)) {
+        console.warn(`Plage nommée '${rangeName}' non trouvée, impossible de sauvegarder`);
+        return;
+    }
+
     const rangeInfo = await getNamedRangeInfo(spreadsheetId, rangeName);
 
     if (!rangeInfo) {

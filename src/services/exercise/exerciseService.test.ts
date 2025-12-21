@@ -2,11 +2,11 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { loadExercisesFromSheets, saveExercisesToSheets } from './exerciseService';
 import * as googleClient from '../google/client';
 
-// Mock des fonctions du client Google
 vi.mock('../google/client', () => ({
     getSpreadsheetData: vi.fn(),
     writeSpreadsheetData: vi.fn(),
     getNamedRangeInfo: vi.fn(),
+    getSpreadsheetNamedRanges: vi.fn(),
 }));
 
 describe('exerciseService', () => {
@@ -22,6 +22,7 @@ describe('exerciseService', () => {
                 ['', 'Pec / Deck machine', '2', '', '10-15', '2', '15/10kg', '12/10kg', '', '', '', '']
             ];
 
+            vi.mocked(googleClient.getSpreadsheetNamedRanges).mockResolvedValue(['semaine1_HautDuCorps']);
             vi.mocked(googleClient.getSpreadsheetData).mockResolvedValue(mockData);
 
             // Act
@@ -51,6 +52,7 @@ describe('exerciseService', () => {
                 ['', 'Exercice Test', '2', '', '10-12', '2', '10/5kg', '12/5kg', '', '', '', '']
             ];
 
+            vi.mocked(googleClient.getSpreadsheetNamedRanges).mockResolvedValue(['semaine2_HautDuCorps', 'semaine1_HautDuCorps']);
             vi.mocked(googleClient.getSpreadsheetData)
                 .mockResolvedValueOnce(currentWeekData)
                 .mockResolvedValueOnce(previousWeekData);
@@ -74,6 +76,7 @@ describe('exerciseService', () => {
                 ['', 'Exercice Test', '1', '', '10', '2', '12/7.5kg', '', '', '', '', '']
             ];
 
+            vi.mocked(googleClient.getSpreadsheetNamedRanges).mockResolvedValue(['semaine1_HautDuCorps']);
             vi.mocked(googleClient.getSpreadsheetData).mockResolvedValue(mockData);
 
             // Act
@@ -92,6 +95,7 @@ describe('exerciseService', () => {
                 ['', 'Ecarté poulie basse', '2', '', '10-15', '2', '12/7.5kg', '13/7.5kg', '', '', '', '']
             ];
 
+            vi.mocked(googleClient.getSpreadsheetNamedRanges).mockResolvedValue(['semaine1_HautDuCorps']);
             vi.mocked(googleClient.getSpreadsheetData).mockResolvedValue(mockData);
 
             // Act
@@ -104,6 +108,7 @@ describe('exerciseService', () => {
 
         it('should return empty array when no data', async () => {
             // Arrange
+            vi.mocked(googleClient.getSpreadsheetNamedRanges).mockResolvedValue(['semaine1_HautDuCorps']);
             vi.mocked(googleClient.getSpreadsheetData).mockResolvedValue([]);
 
             // Act
@@ -173,6 +178,7 @@ describe('exerciseService', () => {
                 endColumn: 12
             };
 
+            vi.mocked(googleClient.getSpreadsheetNamedRanges).mockResolvedValue(['semaine1_HautDuCorps']);
             vi.mocked(googleClient.getNamedRangeInfo).mockResolvedValue(mockRangeInfo);
             vi.mocked(googleClient.writeSpreadsheetData).mockResolvedValue(undefined);
 
@@ -188,7 +194,6 @@ describe('exerciseService', () => {
         });
 
         it('should not save if named range does not exist', async () => {
-            // Arrange
             const exercises = [
                 {
                     exercise: 'Exercice 1',
@@ -198,17 +203,12 @@ describe('exerciseService', () => {
                 }
             ];
 
-            vi.mocked(googleClient.getNamedRangeInfo).mockResolvedValue(null);
-            const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => { });
+            vi.mocked(googleClient.getSpreadsheetNamedRanges).mockResolvedValue([]);
 
-            // Act
             await saveExercisesToSheets('spreadsheet-id', '1', 'HautDuCorps', exercises);
 
-            // Assert
+            expect(googleClient.getNamedRangeInfo).not.toHaveBeenCalled();
             expect(googleClient.writeSpreadsheetData).not.toHaveBeenCalled();
-            expect(consoleErrorSpy).toHaveBeenCalledWith('Plage nommée non trouvée:', 'semaine1_HautDuCorps');
-
-            consoleErrorSpy.mockRestore();
         });
 
         it('should correctly calculate column for different range positions', async () => {
@@ -230,6 +230,7 @@ describe('exerciseService', () => {
                 endColumn: 10
             };
 
+            vi.mocked(googleClient.getSpreadsheetNamedRanges).mockResolvedValue(['semaine1_HautDuCorps']);
             vi.mocked(googleClient.getNamedRangeInfo).mockResolvedValue(mockRangeInfo);
             vi.mocked(googleClient.writeSpreadsheetData).mockResolvedValue(undefined);
 
