@@ -9,6 +9,7 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
+    "start": "yarn run dev",
     "test": "vitest",
     "test:ci": "vitest run --reporter=verbose",
     "test:ui": "vitest --ui",

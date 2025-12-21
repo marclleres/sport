@@ -110,6 +110,7 @@ export const ExerciseForm = () => {
                                 type="button"
                                 className="btn btn-primary"
                                 onClick={() => append(defaultExercise)}
+                                disabled={true}
                             >
                                 Ajouter un exercice
                             </button>
@@ -130,6 +131,8 @@ export const ExerciseForm = () => {
                                 type="button"
                                 className="btn btn-primary mb-3"
                                 onClick={() => append(defaultExercise)}
+                                disabled={true}
+
                             >
                                 Ajouter un exercice
                             </button>

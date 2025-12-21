@@ -41,13 +41,11 @@ export const ExerciseItem = ({ exerciseIndex, register, control, remove }: Exerc
                         </a>
                     )}
                 </div>
-                <button
-                    type="button"
-                    className="btn btn-danger btn-sm ms-2"
+                <i
+                    className="bi bi-x-lg ms-2 text-danger fs-5 opacity-50 pe-none"
+                    role="button"
                     onClick={() => remove(exerciseIndex)}
-                >
-                    X
-                </button>
+                ></i>
             </div>
 
             {isOpen && (
@@ -114,13 +112,12 @@ export const ExerciseItem = ({ exerciseIndex, register, control, remove }: Exerc
                                     {...register(`exercises.${exerciseIndex}.set.${setIndex}.weight`, {
                                         setValueAs: (v: string) => v === '' ? 0 : Number(v)
                                     })} />
-                                <button
-                                    type="button"
-                                    className="btn btn-sm btn-danger"
+                                <i
+                                    className="bi bi-x-lg text-danger text-center"
+                                    role="button"
+                                    style={{ width: '38px' }}
                                     onClick={() => setsFieldArray.remove(setIndex)}
-                                >
-                                    X
-                                </button>
+                                ></i>
                             </div>
                         ))}
 

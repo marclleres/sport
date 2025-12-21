@@ -19,11 +19,11 @@ export const Home = () => {
     return (
         <div className="container px-3">
             <div className="d-flex align-items-center justify-content-center gap-3 py-3">
-                <button className="btn btn-danger" onClick={handleLogout}>
+                <button className="btn btn-danger btn-sm" onClick={handleLogout}>
                     Déconnexion
                 </button>
                 <button className="btn btn-secondary btn-sm" onClick={() => navigate('/configure')}>
-                    ⚙️
+                    <i className="bi bi-gear-fill"></i>
                 </button>
                 <SwitchTheme />
             </div>
