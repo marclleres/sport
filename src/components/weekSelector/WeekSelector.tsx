@@ -55,15 +55,18 @@ export const WeekSelector = () => {
 
     return (
         <div className="text-center p-2">
-            {sheets.map(sheet => (
-                <button
-                    key={sheet.sheetId}
-                    className={`btn ${semaine === sheet.weekNumber.toString() ? 'btn-primary' : 'btn-outline-primary'} me-2 mb-2`}
-                    onClick={() => navigate(`/week/${sheet.weekNumber}${groupe ? `/${groupe}` : ''}`)}
-                >
-                    Semaine {sheet.weekNumber}
-                </button>
-            ))}
+            <select
+                className="form-select form-select-sm w-auto mx-auto"
+                value={semaine || ''}
+                onChange={(e) => navigate(`/week/${e.target.value}${groupe ? `/${groupe}` : ''}`)}
+            >
+                <option value="">Sélectionner une semaine</option>
+                {sheets.map(sheet => (
+                    <option key={sheet.sheetId} value={sheet.weekNumber}>
+                        Semaine {sheet.weekNumber}
+                    </option>
+                ))}
+            </select>
         </div>
     );
 };

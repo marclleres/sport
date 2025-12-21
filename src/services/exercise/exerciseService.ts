@@ -1,4 +1,4 @@
-import { getSpreadsheetData, writeSpreadsheetData, getNamedRangeInfo } from "../google/client";
+import { getSpreadsheetData, writeSpreadsheetData, getNamedRangeInfo, getSpreadsheetNamedRanges } from "../google/client";
 
 const parseSetValuesFromRow = (row: string[], startIndex: number = 5, endIndex: number = 8): Array<{ count: number, weight: number }> => {
     const setValues = [];
@@ -34,6 +34,13 @@ export const loadExercisesFromSheets = async (
     const semaineAsInt = parseInt(semaine);
     const rangeName = `semaine${semaineAsInt}_${groupe}`;
 
+    // Vérifier si la plage nommée existe
+    const namedRanges = await getSpreadsheetNamedRanges(spreadsheetId);
+    if (!namedRanges.includes(rangeName)) {
+        console.warn(`Plage nommée '${rangeName}' non trouvée, retour d'une liste vide`);
+        return [];
+    }
+
     const rawData = await getSpreadsheetData(spreadsheetId, rangeName);
     // Ignorer la première colonne et filtrer les lignes vides ou d'en-tête
     const data = rawData?.map((row: string[]) => row.slice(1)).filter((row: string[]) => row[0] && row[0] !== 'Exercice');
@@ -41,13 +48,16 @@ export const loadExercisesFromSheets = async (
     const precedentExercice: Record<string, any[]> = {};
     if (semaineAsInt > 1) {
         const prevRangeName = `semaine${semaineAsInt - 1}_${groupe}`;
-        const rawDataBefore = await getSpreadsheetData(spreadsheetId, prevRangeName);
-        const dataBefore = rawDataBefore?.map((row: string[]) => row.slice(1)).filter((row: string[]) => row[0] && row[0] !== 'Exercice');
-        if (dataBefore && Array.isArray(dataBefore) && dataBefore.length > 0) {
-            dataBefore.forEach((row: string[]) => {
-                const [name] = row;
-                precedentExercice[name] = parseSetValuesFromRow(row);
-            });
+        // Vérifier si la plage précédente existe avant de la charger
+        if (namedRanges.includes(prevRangeName)) {
+            const rawDataBefore = await getSpreadsheetData(spreadsheetId, prevRangeName);
+            const dataBefore = rawDataBefore?.map((row: string[]) => row.slice(1)).filter((row: string[]) => row[0] && row[0] !== 'Exercice');
+            if (dataBefore && Array.isArray(dataBefore) && dataBefore.length > 0) {
+                dataBefore.forEach((row: string[]) => {
+                    const [name] = row;
+                    precedentExercice[name] = parseSetValuesFromRow(row);
+                });
+            }
         }
     }
 
