@@ -9,7 +9,7 @@ export const GoogleLoginButton = () => {
 
     const login = useGoogleLogin({
         onSuccess: async (tokenResponse) => {
-            console.log('Token:', tokenResponse);
+            storage.setAccessToken(tokenResponse.access_token);
 
             // Récupérer les infos utilisateur
             const userInfo = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
@@ -19,11 +19,9 @@ export const GoogleLoginButton = () => {
             const userData = await userInfo.json();
             setUser(userData);
 
-            // Stocker le token pour les requêtes Google Sheets
-            storage.setAccessToken(tokenResponse.access_token);
             navigate('/week/1');
         },
-        scope: 'https://www.googleapis.com/auth/spreadsheets',
+        scope: 'https://www.googleapis.com/auth/drive',
     });
 
     const logout = () => {

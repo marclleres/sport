@@ -1,2 +1,2 @@
-export { loadExercisesFromSheets, saveExercisesToSheets } from './exerciseService';
-export type { ExerciseData } from './exerciseService';
+export { loadExercisesFromJson, saveExercisesToJson, getAvailableWeeks, migrateAllWeeksPositions } from './exerciseJsonService';
+export type { ExerciseData } from './exerciseJsonService';

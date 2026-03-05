@@ -4,8 +4,7 @@ import { ExerciseFormSkeleton } from "./ExerciseFormSkeleton";
 import { useEffect, useState, useRef } from "react";
 import { useParams } from "react-router-dom";
 import { defaultExercise, type Inputs } from "./interface";
-import { useSpreadsheetId } from "../../hooks/useSpreadsheetId";
-import { loadExercisesFromSheets, saveExercisesToSheets } from "../../services/exercise";
+import { loadExercisesFromJson, saveExercisesToJson } from "../../services/exercise";
 
 const useDebounce = <T,>(value: T, delay: number): T => {
     const [debouncedValue, setDebouncedValue] = useState<T>(value);
@@ -36,7 +35,6 @@ export const ExerciseForm = () => {
     })
 
     const { semaine, groupe } = useParams()
-    const spreadsheetId = useSpreadsheetId()
     const [isLoaded, setIsLoaded] = useState(false)
     const justLoadedRef = useRef(false)
     const lastLoadedGroupRef = useRef<string | null>(null)
@@ -48,11 +46,11 @@ export const ExerciseForm = () => {
     const watchedExercises = useWatch({ control, name: "exercises" })
     const debouncedExercises = useDebounce(watchedExercises, 2000);
 
-    const loadFromSheets = async () => {
+    const loadFromJson = async () => {
         try {
-            if (!spreadsheetId || !groupe || !semaine) return;
+            if (!groupe || !semaine) return;
 
-            const exercises = await loadExercisesFromSheets(spreadsheetId, semaine, groupe);
+            const exercises = await loadExercisesFromJson(semaine, groupe);
 
             if (exercises.length > 0) {
                 reset({ exercises });
@@ -71,10 +69,10 @@ export const ExerciseForm = () => {
         }
     };
 
-    const saveToSheets = async (data: Inputs) => {
+    const saveToJson = async (data: Inputs) => {
         try {
-            if (!spreadsheetId || !groupe || !semaine) return;
-            await saveExercisesToSheets(spreadsheetId, semaine, groupe, data.exercises);
+            if (!groupe || !semaine) return;
+            await saveExercisesToJson(semaine, groupe, data.exercises);
         } catch (error) {
             console.error('Erreur lors de la sauvegarde:', error);
         }
@@ -84,7 +82,7 @@ export const ExerciseForm = () => {
         if (lastLoadedGroupRef.current !== groupe) {
             setIsLoaded(false);
         }
-        loadFromSheets();
+        loadFromJson();
     }, [semaine, groupe]);
 
     useEffect(() => {
@@ -95,10 +93,10 @@ export const ExerciseForm = () => {
             return;
         }
 
-        saveToSheets({ exercises: debouncedExercises });
+        saveToJson({ exercises: debouncedExercises });
     }, [debouncedExercises, isLoaded]);
 
-    const onSubmit = async (data: Inputs) => saveToSheets(data);
+    const onSubmit = async (data: Inputs) => saveToJson(data);
 
     return (
         <>
@@ -135,7 +133,6 @@ export const ExerciseForm = () => {
                                 className="btn btn-primary mb-3"
                                 onClick={() => append(defaultExercise)}
                                 disabled={true}
-
                             >
                                 Ajouter un exercice
                             </button>

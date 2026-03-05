@@ -2,7 +2,6 @@
 import { useNavigate, useParams } from "react-router-dom";
 import { SwitchTheme } from '../components/theme';
 import { ExerciseForm } from '../components/exerciseForm';
-import { useSpreadsheetId } from '../hooks/useSpreadsheetId';
 import { storage } from '../services/storage';
 import { WeekSelector } from '../components/weekSelector';
 import { GroupSelector } from '../components/groupSelector';
@@ -11,10 +10,8 @@ import { useState } from 'react';
 
 export const Home = () => {
     const navigate = useNavigate();
-    const spreadsheetId = useSpreadsheetId();
     const { groupe } = useParams();
     const [isGroupLoading, setIsGroupLoading] = useState(true);
-
     const handleLogout = () => {
         storage.removeAccessToken();
         navigate('/auth');
@@ -26,17 +23,10 @@ export const Home = () => {
                 <button className="btn btn-danger btn-sm" onClick={handleLogout}>
                     Déconnexion
                 </button>
-                <button className="btn btn-secondary btn-sm" onClick={() => navigate('/configure')}>
-                    <i className="bi bi-gear-fill"></i>
-                </button>
                 <SwitchTheme />
             </div>
 
-            <h3 className="text-center">
-                <a href={`https://docs.google.com/spreadsheets/d/${spreadsheetId}`} target="_blank" rel="noopener noreferrer">
-                    Program
-                </a>
-            </h3>
+            <h3 className="text-center">Program</h3>
             <WeekSelector />
             <GroupSelector onLoadingChange={setIsGroupLoading} />
             <div className="d-flex justify-content-center">

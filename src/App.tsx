@@ -3,22 +3,17 @@ import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { GoogleAuthPage } from './pages/GoogleAuthPage';
 import { Home } from './pages/Home';
 import { ProtectedRoute } from './components/ProtectedRoute';
-import { ConfigurePage } from './pages/ConfigurePage';
-import { RequireSpreadsheet } from './components/RequireSpreadsheet';
 
 function App() {
   return (
     <HashRouter>
       <Routes>
         <Route path="/auth" element={<GoogleAuthPage />} />
-        <Route path="/configure" element={<ConfigurePage />} />
         <Route
           path="/week/:semaine/:groupe"
           element={
             <ProtectedRoute>
-              <RequireSpreadsheet>
-                <Home />
-              </RequireSpreadsheet>
+              <Home />
             </ProtectedRoute>
           }
         />
@@ -26,9 +21,7 @@ function App() {
           path="/week/:semaine"
           element={
             <ProtectedRoute>
-              <RequireSpreadsheet>
-                <Home />
-              </RequireSpreadsheet>
+              <Home />
             </ProtectedRoute>
           }
         />

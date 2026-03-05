@@ -1,55 +1,27 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getSpreadsheetNamedRanges } from '../../services/google/client';
-import { useSpreadsheetId } from '../../hooks/useSpreadsheetId';
 
 interface GroupSelectorProps {
     onLoadingChange?: (loading: boolean) => void;
 }
 
+const availableGroups = ['HautDuCorps', 'Jambes', 'FullBody'];
+
 export const GroupSelector = ({ onLoadingChange }: GroupSelectorProps = {}) => {
     const { semaine, groupe } = useParams();
     const navigate = useNavigate();
-    const spreadsheetId = useSpreadsheetId();
-    const [namedRanges, setNamedRanges] = useState<string[]>([]);
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(false);
 
     useEffect(() => {
         onLoadingChange?.(loading);
     }, [loading, onLoadingChange]);
 
     useEffect(() => {
-        const loadNamedRanges = async () => {
-            if (!spreadsheetId || !semaine) return;
-
-            try {
-                setLoading(true);
-                const allRanges = await getSpreadsheetNamedRanges(spreadsheetId);
-
-                const prefix = `semaine${semaine}_`;
-                const weekRanges = allRanges
-                    .filter((name: string) => name.startsWith(prefix))
-                    .map((name: string) => name.replace(prefix, ''))
-                    .sort();
-
-                setNamedRanges(weekRanges);
-
-                if (weekRanges.length > 0 && semaine) {
-                    if (!groupe || !weekRanges.includes(groupe)) {
-                        navigate(`/week/${semaine}/${weekRanges[0]}`, { replace: true });
-                        return;
-                    }
-                }
-
-                setLoading(false);
-            } catch (error) {
-                console.error('Erreur lors du chargement des plages nommées:', error);
-                setLoading(false);
-            }
-        };
-
-        loadNamedRanges();
-    }, [spreadsheetId, semaine, groupe]);
+        // Rediriger vers le premier groupe si aucun n'est sélectionné ou si le groupe est invalide
+        if (semaine && (!groupe || !availableGroups.includes(groupe))) {
+            navigate(`/week/${semaine}/${availableGroups[0]}`, { replace: true });
+        }
+    }, [semaine, groupe, navigate]);
 
     if (loading) {
         return (
@@ -64,19 +36,15 @@ export const GroupSelector = ({ onLoadingChange }: GroupSelectorProps = {}) => {
         );
     }
 
-    if (namedRanges.length === 0) {
-        return null;
-    }
-
     return (
         <div className="d-flex justify-content-center gap-2 mb-3 flex-wrap">
-            {namedRanges.map((rangeName) => (
+            {availableGroups.map((groupName) => (
                 <button
-                    key={rangeName}
-                    className={`btn btn-sm ${groupe === rangeName ? 'btn-primary' : 'btn-outline-primary'}`}
-                    onClick={() => navigate(`/week/${semaine}/${rangeName}`)}
+                    key={groupName}
+                    className={`btn btn-sm ${groupe === groupName ? 'btn-primary' : 'btn-outline-primary'}`}
+                    onClick={() => navigate(`/week/${semaine}/${groupName}`)}
                 >
-                    {rangeName}
+                    {groupName === 'HautDuCorps' ? 'Haut du corps' : groupName === 'FullBody' ? 'Full Body' : groupName}
                 </button>
             ))}
         </div>
