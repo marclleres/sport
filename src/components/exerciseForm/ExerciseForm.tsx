@@ -39,7 +39,7 @@ export const ExerciseForm = () => {
     const { semaine, groupe } = useParams()
     const [isLoaded, setIsLoaded] = useState(false)
     const lastLoadedGroupRef = useRef<string | null>(null)
-    const { fields, append, remove } = useFieldArray({
+    const { fields, remove } = useFieldArray({
         control,
         name: "exercises"
     })

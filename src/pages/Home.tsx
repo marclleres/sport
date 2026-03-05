@@ -6,12 +6,10 @@ import { storage } from '../services/storage';
 import { WeekSelector } from '../components/weekSelector';
 import { GroupSelector } from '../components/groupSelector';
 import { ExerciseFormSkeleton } from '../components/exerciseForm/ExerciseFormSkeleton';
-import { useState } from 'react';
 
 export const Home = () => {
     const navigate = useNavigate();
     const { groupe } = useParams();
-    const [isGroupLoading, setIsGroupLoading] = useState(true);
     const handleLogout = () => {
         storage.removeAccessToken();
         navigate('/auth');
@@ -28,9 +26,9 @@ export const Home = () => {
 
             <h3 className="text-center">Program</h3>
             <WeekSelector />
-            <GroupSelector onLoadingChange={setIsGroupLoading} />
+            <GroupSelector />
             <div className="d-flex justify-content-center">
-                {groupe && !isGroupLoading ? <ExerciseForm /> : <ExerciseFormSkeleton />}
+                {groupe ? <ExerciseForm /> : <ExerciseFormSkeleton />}
             </div>
         </div>
     )
