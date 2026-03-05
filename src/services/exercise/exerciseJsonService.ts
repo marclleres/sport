@@ -98,30 +98,6 @@ export const loadExercisesFromJson = async (
     }
 };
 
-export const migrateAllWeeksPositions = async (): Promise<void> => {
-    const weeks = await listWeekFolders();
-    const fileNames = ['HautDuCorps.json', 'Jambes.json', 'FullBody.json'];
-
-    for (const weekNumber of weeks) {
-        for (const fileName of fileNames) {
-            try {
-                const data: WorkoutSession = await getJsonFileFromWeek(weekNumber, fileName);
-                const needsMigration = data.exercises.some(ex => ex.set.some(s => s.position === undefined));
-                if (!needsMigration) continue;
-
-                const migratedExercises = data.exercises.map(exercise => ({
-                    ...exercise,
-                    set: exercise.set.map((s, index) => ({ ...s, position: index })),
-                }));
-
-                await saveJsonFileToWeek(weekNumber, fileName, { ...data, exercises: migratedExercises });
-                console.log(`Migré: Week${weekNumber}/${fileName}`);
-            } catch (e) {
-                console.warn(`Migration ignorée pour Week${weekNumber}/${fileName}:`, e);
-            }
-        }
-    }
-};
 
 export const saveExercisesToJson = async (
     semaine: string,

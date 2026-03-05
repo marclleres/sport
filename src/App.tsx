@@ -26,6 +26,7 @@ function App() {
           }
         />
         <Route path="/" element={<Navigate to="/week/1" replace />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </HashRouter>
   );

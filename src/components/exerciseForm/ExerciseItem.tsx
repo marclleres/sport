@@ -90,7 +90,7 @@ export const ExerciseItem = ({ exerciseIndex, register, control, clearSet }: Exe
                             <span className="form-control border-0 bg-transparent">Poids (kg)</span>
                             <span style={{ width: '38px' }}></span>
                         </div>
-                        {setsFieldArray.fields.map((setField: any, setIndex) => (
+                        {setsFieldArray.fields.map((setField, setIndex) => (
                             <div key={setField.id} className="d-flex gap-2 mb-2 align-items-center">
                                 <span>{setIndex + 1}</span>
                                 <input

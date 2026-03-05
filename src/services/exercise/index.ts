@@ -1,2 +1,2 @@
-export { loadExercisesFromJson, saveExercisesToJson, getAvailableWeeks, migrateAllWeeksPositions } from './exerciseJsonService';
+export { loadExercisesFromJson, saveExercisesToJson, getAvailableWeeks } from './exerciseJsonService';
 export type { ExerciseData } from './exerciseJsonService';

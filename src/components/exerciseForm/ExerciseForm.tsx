@@ -39,7 +39,8 @@ export const ExerciseForm = () => {
     const { semaine, groupe } = useParams()
     const [isLoaded, setIsLoaded] = useState(false)
     const lastLoadedGroupRef = useRef<string | null>(null)
-    const { fields, remove } = useFieldArray({
+    const loadIdRef = useRef(0)
+    const { fields } = useFieldArray({
         control,
         name: "exercises"
     })
@@ -48,14 +49,16 @@ export const ExerciseForm = () => {
     const debouncedExercises = useDebounce(watchedExercises, 2000);
 
     const loadFromJson = async () => {
+        if (!groupe || !semaine) return;
+        const loadId = ++loadIdRef.current;
         try {
-            if (!groupe || !semaine) return;
-
             const exercises = await loadExercisesFromJson(semaine, groupe);
+            if (loadId !== loadIdRef.current) return;
             reset({ exercises: exercises.length > 0 ? exercises : [] });
             lastLoadedGroupRef.current = groupe;
             setIsLoaded(true);
         } catch (error) {
+            if (loadId !== loadIdRef.current) return;
             console.error('Erreur:', error);
             setIsLoaded(true);
         }
@@ -102,7 +105,6 @@ export const ExerciseForm = () => {
                                     exerciseIndex={exerciseIndex}
                                     register={register}
                                     control={control}
-                                    remove={remove}
                                     clearSet={(setIndex) => {
                                         setValue(`exercises.${exerciseIndex}.set.${setIndex}.count`, undefined as any, { shouldDirty: true });
                                         setValue(`exercises.${exerciseIndex}.set.${setIndex}.weight`, undefined as any, { shouldDirty: true });

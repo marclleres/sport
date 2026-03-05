@@ -1,10 +1,9 @@
-import type { Control, UseFormRegister, UseFieldArrayRemove } from "react-hook-form";
+import type { Control, UseFormRegister } from "react-hook-form";
 import type { Inputs } from "./interface";
 
 export interface ExerciseItemProps {
     exerciseIndex: number;
     register: UseFormRegister<Inputs>;
     control: Control<Inputs>;
-    remove: UseFieldArrayRemove;
     clearSet: (setIndex: number) => void;
 }
