@@ -2,7 +2,7 @@ import { useFieldArray, useWatch } from "react-hook-form";
 import { useState } from "react";
 import type { ExerciseItemProps } from "./types";
 
-export const ExerciseItem = ({ exerciseIndex, register, control, remove }: ExerciseItemProps) => {
+export const ExerciseItem = ({ exerciseIndex, register, control, clearSet }: ExerciseItemProps) => {
     const [isOpen, setIsOpen] = useState(true);
     const setsFieldArray = useFieldArray({
         control,
@@ -41,11 +41,6 @@ export const ExerciseItem = ({ exerciseIndex, register, control, remove }: Exerc
                         </a>
                     )}
                 </div>
-                <i
-                    className="bi bi-x-lg ms-2 text-danger fs-5 opacity-50 pe-none"
-                    role="button"
-                    onClick={() => remove(exerciseIndex)}
-                ></i>
             </div>
 
             {isOpen && (
@@ -116,22 +111,10 @@ export const ExerciseItem = ({ exerciseIndex, register, control, remove }: Exerc
                                     className="bi bi-x-lg text-danger text-center"
                                     role="button"
                                     style={{ width: '38px' }}
-                                    onClick={() => setsFieldArray.remove(setIndex)}
+                                    onClick={() => clearSet(setIndex)}
                                 ></i>
                             </div>
                         ))}
-
-                        <span title={setsFieldArray.fields.length >= 4 ? "Maximum 4 sets" : ""}>
-                            <button
-                                type="button"
-                                className="btn btn-sm btn-secondary mt-2"
-                                onClick={() => setsFieldArray.append({ count: undefined, weight: undefined })}
-                                disabled={setsFieldArray.fields.length >= 4}
-                                style={setsFieldArray.fields.length >= 4 ? { pointerEvents: 'none' } : {}}
-                            >
-                                + Ajouter un set
-                            </button>
-                        </span>
                     </div>
                 </div>
             )}

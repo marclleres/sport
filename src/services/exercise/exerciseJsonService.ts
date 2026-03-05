@@ -38,9 +38,13 @@ const groupeFileMap: Record<string, string> = {
     'FullBody': 'FullBody.json'
 };
 
-const parseWeight = (weight: string): number => {
-    return parseFloat(weight.replace('kg', ''));
-};
+const parseWeight = (weight: string): number => parseFloat(weight.replace('kg', ''));
+
+const mapSets = (sets: ExerciseSet[], count: number) =>
+    Array.from({ length: count }, (_, index) => {
+        const set = sets.find(s => s.position === index);
+        return { count: set?.count, weight: set ? parseWeight(set.weight) : undefined };
+    });
 
 /**
  * Récupère la liste des semaines disponibles depuis Google Drive
@@ -67,53 +71,27 @@ export const loadExercisesFromJson = async (
     }
 
     try {
-        // Récupérer le fichier JSON depuis Google Drive
         const workoutData: WorkoutSession = await getJsonFileFromWeek(weekNumber, fileName);
 
-        // Charger les données de la semaine précédente pour les placeholders
-        let previousWeekData: WorkoutSession | null = null;
+        let previousExercises: Record<string, ExerciseSet[]> = {};
         if (weekNumber > 1) {
             try {
-                previousWeekData = await getJsonFileFromWeek(weekNumber - 1, fileName);
-            } catch (e) {
-                console.warn(`Pas de données pour la semaine ${weekNumber - 1}`);
+                const prev = await getJsonFileFromWeek(weekNumber - 1, fileName);
+                previousExercises = Object.fromEntries(prev.exercises.map((ex: Exercise) => [ex.exercice, ex.set]));
+            } catch {
+                // pas de données pour la semaine précédente
             }
         }
 
-        // Créer un map des exercices précédents
-        const precedentExercice: Record<string, ExerciseSet[]> = {};
-        if (previousWeekData?.exercises) {
-            previousWeekData.exercises.forEach(ex => {
-                precedentExercice[ex.exercice] = ex.set;
-            });
-        }
-
-        // Transformer les données au format ExerciseData
-        return workoutData.exercises.map(exercise => {
-            const previousSets = precedentExercice[exercise.exercice] || [];
-
-            return {
-                exercise: exercise.exercice,
-                set: Array.from({ length: exercise.setCount }, (_, index) => {
-                    const currentSet = exercise.set.find(s => s.position === index) ?? exercise.set[index];
-                    return {
-                        count: currentSet?.count,
-                        weight: currentSet ? parseWeight(currentSet.weight) : undefined
-                    };
-                }),
-                setPlaceHolder: Array.from({ length: exercise.setCount }, (_, index) => {
-                    const prevSet = previousSets.find(s => s.position === index) ?? previousSets[index];
-                    return {
-                        count: prevSet?.count,
-                        weight: prevSet ? parseWeight(prevSet.weight) : undefined
-                    };
-                }),
-                repetitions: exercise.repetitionCount,
-                rir: exercise.rir.toString(),
-                multiset: exercise.instensification || '',
-                youtubeLink: exercise.mouvement
-            };
-        });
+        return workoutData.exercises.map(exercise => ({
+            exercise: exercise.exercice,
+            set: mapSets(exercise.set, exercise.setCount),
+            setPlaceHolder: mapSets(previousExercises[exercise.exercice] ?? [], exercise.setCount),
+            repetitions: exercise.repetitionCount,
+            rir: exercise.rir.toString(),
+            multiset: exercise.instensification || '',
+            youtubeLink: exercise.mouvement
+        }));
     } catch (error) {
         console.error(`Erreur lors du chargement des exercices depuis JSON:`, error);
         return [];

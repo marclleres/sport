@@ -27,7 +27,9 @@ export const ExerciseForm = () => {
         register,
         handleSubmit,
         control,
-        reset
+        reset,
+        setValue,
+        formState: { isDirty }
     } = useForm<Inputs>({
         defaultValues: {
             exercises: [defaultExercise]
@@ -36,7 +38,6 @@ export const ExerciseForm = () => {
 
     const { semaine, groupe } = useParams()
     const [isLoaded, setIsLoaded] = useState(false)
-    const justLoadedRef = useRef(false)
     const lastLoadedGroupRef = useRef<string | null>(null)
     const { fields, append, remove } = useFieldArray({
         control,
@@ -51,18 +52,9 @@ export const ExerciseForm = () => {
             if (!groupe || !semaine) return;
 
             const exercises = await loadExercisesFromJson(semaine, groupe);
-
-            if (exercises.length > 0) {
-                reset({ exercises });
-                lastLoadedGroupRef.current = groupe;
-                setIsLoaded(true);
-                justLoadedRef.current = true;
-            } else {
-                reset({ exercises: [] });
-                lastLoadedGroupRef.current = groupe;
-                setIsLoaded(true);
-                justLoadedRef.current = true;
-            }
+            reset({ exercises: exercises.length > 0 ? exercises : [] });
+            lastLoadedGroupRef.current = groupe;
+            setIsLoaded(true);
         } catch (error) {
             console.error('Erreur:', error);
             setIsLoaded(true);
@@ -86,15 +78,9 @@ export const ExerciseForm = () => {
     }, [semaine, groupe]);
 
     useEffect(() => {
-        if (!isLoaded || !debouncedExercises) return;
-
-        if (justLoadedRef.current) {
-            justLoadedRef.current = false;
-            return;
-        }
-
+        if (!isLoaded || !debouncedExercises || !isDirty) return;
         saveToJson({ exercises: debouncedExercises });
-    }, [debouncedExercises, isLoaded]);
+    }, [debouncedExercises, isLoaded, isDirty]);
 
     const onSubmit = async (data: Inputs) => saveToJson(data);
 
@@ -107,14 +93,6 @@ export const ExerciseForm = () => {
                     {fields.length === 0 ? (
                         <div className="text-center p-4">
                             <p className="text-muted mb-3">Cette semaine ne contient pas encore d'exercices</p>
-                            <button
-                                type="button"
-                                className="btn btn-primary"
-                                onClick={() => append(defaultExercise)}
-                                disabled={true}
-                            >
-                                Ajouter un exercice
-                            </button>
                         </div>
                     ) : (
                         <>
@@ -125,17 +103,12 @@ export const ExerciseForm = () => {
                                     register={register}
                                     control={control}
                                     remove={remove}
+                                    clearSet={(setIndex) => {
+                                        setValue(`exercises.${exerciseIndex}.set.${setIndex}.count`, undefined as any, { shouldDirty: true });
+                                        setValue(`exercises.${exerciseIndex}.set.${setIndex}.weight`, undefined as any, { shouldDirty: true });
+                                    }}
                                 />
                             ))}
-
-                            <button
-                                type="button"
-                                className="btn btn-primary mb-3"
-                                onClick={() => append(defaultExercise)}
-                                disabled={true}
-                            >
-                                Ajouter un exercice
-                            </button>
                         </>
                     )}
                 </form>

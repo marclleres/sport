@@ -6,4 +6,5 @@ export interface ExerciseItemProps {
     register: UseFormRegister<Inputs>;
     control: Control<Inputs>;
     remove: UseFieldArrayRemove;
+    clearSet: (setIndex: number) => void;
 }
